@@ -2,11 +2,11 @@
 
 import json
 import uuid
-from datetime import datetime
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+from utils import get_current_date
 from routers import room_router
 from connection_manager import manager
 
@@ -54,7 +54,7 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str):
                     {
                         "type": "error",
                         "message": "Invalid message format. Please send valid JSON.",
-                        "timestamp": datetime.now().isoformat()
+                        "timestamp": get_current_date()
                     }
                 )
                 continue
@@ -68,7 +68,7 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str):
                     {
                         "type": "error",
                         "message": "Message cannot be empty.",
-                        "timestamp": datetime.now().isoformat()
+                        "timestamp": get_current_date()
                     }
                 )
                 continue
@@ -78,7 +78,7 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str):
                 "type": "message",
                 "username": username,
                 "content": content,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": get_current_date(),
                 "id": str(uuid.uuid4())
             }
 

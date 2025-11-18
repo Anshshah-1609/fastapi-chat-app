@@ -31,8 +31,22 @@ function App() {
   const messagesEndRef = useRef(null);
   const currentRoomRef = useRef("");
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (smooth = false) => {
+    if (messagesEndRef.current) {
+      // Scroll to the bottom of the container (newest messages)
+      const scrollHeight = messagesEndRef.current.scrollHeight;
+      const clientHeight = messagesEndRef.current.clientHeight;
+      const maxScrollTop = scrollHeight - clientHeight;
+
+      if (smooth) {
+        messagesEndRef.current.scrollTo({
+          top: maxScrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        messagesEndRef.current.scrollTop = maxScrollTop;
+      }
+    }
   };
 
   const currentRoomMessages = useMemo(
@@ -40,9 +54,26 @@ function App() {
     [rooms, currentRoom]
   );
 
+  // Scroll to show newest messages (top of reversed container) when messages change
   useEffect(() => {
-    scrollToBottom();
+    if (currentRoomMessages.length > 0) {
+      // Small delay to ensure DOM is updated, then scroll to show newest messages
+      const timeoutId = setTimeout(() => {
+        scrollToBottom(true); // Use smooth scroll for new messages
+      }, 50);
+      return () => clearTimeout(timeoutId);
+    }
   }, [currentRoomMessages]);
+
+  // Initial scroll to show newest messages when room is selected
+  useEffect(() => {
+    if (currentRoom) {
+      const timeoutId = setTimeout(() => {
+        scrollToBottom(false); // Instant scroll on room change to show newest
+      }, 150);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentRoom]);
 
   const validateRoomCode = async (code) => {
     if (!code || !code.trim()) {
@@ -624,8 +655,11 @@ function App() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-6">
-              <div className="max-w-4xl mx-auto space-y-4">
+            <div
+              className="flex-1 overflow-y-auto px-4 py-6"
+              ref={messagesEndRef}
+            >
+              <div className="max-w-4xl mx-auto flex flex-col gap-4">
                 {(() => {
                   const messages = rooms[currentRoom]?.messages || [];
                   const groupedMessages = groupMessagesByDate(messages);
@@ -720,7 +754,6 @@ function App() {
                     );
                   });
                 })()}
-                <div ref={messagesEndRef} />
               </div>
             </div>
 

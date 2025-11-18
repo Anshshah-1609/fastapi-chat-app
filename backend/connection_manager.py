@@ -1,11 +1,12 @@
 """Connection manager for chat rooms"""
 
 import asyncio
-from datetime import datetime
 import json
 from typing import Dict, Set, Optional
 
 from fastapi import WebSocket
+
+from utils import get_current_date
 
 
 class ConnectionManager:
@@ -34,7 +35,7 @@ class ConnectionManager:
             {
                 "type": "system",
                 "message": f"Welcome to room {room_code}! You joined as {username}.",
-                "timestamp": datetime.now().isoformat()
+                "timestamp":  get_current_date()
             }
         )
 
@@ -45,7 +46,7 @@ class ConnectionManager:
                 "type": "user_joined",
                 "username": username,
                 "message": f"{username} joined the chat",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": get_current_date()
             },
             exclude_websocket=websocket
         )
@@ -73,11 +74,16 @@ class ConnectionManager:
                         "type": "user_left",
                         "username": username,
                         "message": f"{username} left the chat",
-                        "timestamp": datetime.now().isoformat()
+                        "timestamp":  get_current_date()
                     }
                 ))
 
-    async def broadcast_to_room(self, room_code: str, message: dict, exclude_websocket: Optional[WebSocket] = None):
+    async def broadcast_to_room(
+        self,
+        room_code: str,
+        message: dict,
+        exclude_websocket: Optional[WebSocket] = None
+    ) -> None:
         """Broadcast a message to all connections in a room"""
 
         if room_code not in self.active_connections:
